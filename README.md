@@ -2,6 +2,10 @@
 
 A lightweight, terminal-based media control panel built with Python, `rich`, and `playerctl`. It works on Linux desktop environments with MPRIS support (Spotify, VLC, YouTube Music, Firefox, Chrome, and other compatible players).
 
+
+
+<img width="745" height="297" alt="Screenshot From 2026-10-10 15-08-09" src="https://github.com/user-attachments/assets/f5660887-2f87-4fda-b65b-8bf2f8c126dd" />
+
 ## Features
 
 - Real-time status display for the current track title, artist, and media source.
