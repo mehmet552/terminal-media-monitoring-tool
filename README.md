@@ -46,10 +46,10 @@ Run the command in an interactive terminal while media is playing in an MPRIS-co
 
 ## Performance
 
-- Track metadata is fetched together in one `playerctl` call instead of separate calls for title, artist, player, and duration.
-- Playback status and position still require separate `playerctl` calls; the app checks them at most once per polling cycle (about once per second).
+- Track metadata, playback status, duration, and position are fetched together in one `playerctl` call per polling cycle.
+- The app polls about once per second; each `playerctl` call has a two-second timeout.
 - Rich's automatic redraw timer is disabled; the screen is redrawn only when a new polling cycle completes.
-- This keeps the implementation simple and avoids a permanently running background process. It still starts up to three short-lived `playerctl` processes per polling cycle. Exact CPU/RAM usage has not been benchmarked and depends on the desktop, media player, and terminal.
+- The app avoids a permanently running background process. Exact CPU/RAM usage has not been benchmarked and depends on the desktop, media player, and terminal.
 
 ## Keyboard Controls
 
@@ -64,7 +64,18 @@ Run the command in an interactive terminal while media is playing in an MPRIS-co
 
 - If no active MPRIS player is detected, the app shows a "No active media player found" message.
 - The app and its Python dependency (`rich`) are installed in your home directory's virtual environment; system prerequisites are managed by the distribution package manager.
-- To uninstall, run `sudo rm /usr/local/bin/media_tui` and `rm -rf ~/.local/share/media-tui`. This removes the app and its command link; it does not remove system packages, which may be needed by other software.
+
+## Uninstall
+
+Run these commands from the project directory (the directory containing `media_tui` and `media_tui.py`):
+
+```bash
+rm -f "$HOME/.local/bin/media_tui"
+sudo rm -f /usr/local/bin/media_tui
+rm -rf .venv "${XDG_DATA_HOME:-$HOME/.local/share}/media-tui"
+```
+
+This removes both command links, the local virtual environment, and the installed copy with its virtual environment. It keeps the project source files in the current directory so you can reinstall or inspect them later. It intentionally leaves system packages such as `playerctl`, Git, and Python installed because other applications may need them.
 
 ## Technical references
 

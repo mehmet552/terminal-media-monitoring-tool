@@ -42,27 +42,29 @@ def format_progress(position, length):
 
 def get_mpris_info():
     try:
-        status = run_playerctl("status")
         metadata = run_playerctl(
             "metadata",
             "--format",
-            "{{playerName}}\t{{title}}\t{{artist}}\t{{mpris:length}}",
+            "{{playerName}}\t{{title}}\t{{artist}}\t{{mpris:length}}\t{{status}}\t{{position}}",
         )
-        player, title, artist, length_ms = metadata.split("\t", 3)
+        player, title, artist, length_us, status, position_us = metadata.split("\t", 5)
     except (subprocess.CalledProcessError, ValueError):
         return None
 
     progress = ""
     try:
-        length = float(length_ms) / 1_000_000
-        if length > 0:
-            position = float(run_playerctl("position"))
-            progress = format_progress(position, length)
-    except (subprocess.CalledProcessError, ValueError):
+        length = float(length_us) / 1_000_000
+        position = float(position_us) / 1_000_000
+        progress = format_progress(position, length)
+    except ValueError:
         progress = ""
 
     return {
-        "status": "▶ Playing" if status == "Playing" else "⏸ Paused",
+        "status": {
+            "Playing": "▶ Playing",
+            "Paused": "⏸ Paused",
+            "Stopped": "⏹ Stopped",
+        }.get(status, status),
         "title": title or "Unknown Title",
         "artist": artist or "Unknown Artist",
         "player": player.capitalize() if player else "Unknown Player",
