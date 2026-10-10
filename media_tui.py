@@ -2,13 +2,14 @@ import select
 import subprocess
 import sys
 import termios
-import time
 import tty
 
 from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
 from rich.text import Text
+
+POLL_INTERVAL = 1.0
 
 
 def run_playerctl(*args):
@@ -31,26 +32,29 @@ def format_progress(position, length):
 def get_mpris_info():
     try:
         status = run_playerctl("status")
-        title = run_playerctl("metadata", "title") or "Unknown Title"
-        artist = run_playerctl("metadata", "artist") or "Unknown Artist"
-        player = run_playerctl("metadata", "--format", "{{playerName}}") or "Unknown Player"
-    except Exception:
+        metadata = run_playerctl(
+            "metadata",
+            "--format",
+            "{{playerName}}\t{{title}}\t{{artist}}\t{{mpris:length}}",
+        )
+        player, title, artist, length_ms = metadata.split("\t", 3)
+    except (subprocess.CalledProcessError, ValueError):
         return None
 
     progress = ""
     try:
-        position = float(run_playerctl("position"))
-        length_ms = float(run_playerctl("metadata", "mpris:length"))
-        length = length_ms / 1_000_000 if length_ms > 0 else 0
-        progress = format_progress(position, length)
-    except Exception:
+        length = float(length_ms) / 1_000_000
+        if length > 0:
+            position = float(run_playerctl("position"))
+            progress = format_progress(position, length)
+    except (subprocess.CalledProcessError, ValueError):
         progress = ""
 
     return {
         "status": "▶ Playing" if status == "Playing" else "⏸ Paused",
-        "title": title,
-        "artist": artist,
-        "player": player.capitalize(),
+        "title": title or "Unknown Title",
+        "artist": artist or "Unknown Artist",
+        "player": player.capitalize() if player else "Unknown Player",
         "progress": progress,
     }
 
@@ -84,8 +88,8 @@ def make_layout(data):
     )
 
 
-def is_key_pressed():
-    return select.select([sys.stdin], [], [], 0.1)[0] != []
+def is_key_pressed(timeout):
+    return select.select([sys.stdin], [], [], timeout)[0] != []
 
 
 def handle_key(key):
@@ -102,21 +106,24 @@ def handle_key(key):
 
 def main():
     console = Console()
+    if not sys.stdin.isatty():
+        console.print("Run this application in an interactive terminal.", style="bold red")
+        return
+
     old_settings = termios.tcgetattr(sys.stdin)
 
     try:
         tty.setcbreak(sys.stdin.fileno())
-        with Live(make_layout(get_mpris_info()), refresh_per_second=4, console=console) as live:
+        data = get_mpris_info()
+        with Live(make_layout(data), auto_refresh=False, console=console) as live:
             while True:
-                data = get_mpris_info()
-                live.update(make_layout(data))
-
-                if is_key_pressed():
+                if is_key_pressed(POLL_INTERVAL):
                     key = sys.stdin.read(1)
                     if not handle_key(key):
                         break
 
-                time.sleep(0.1)
+                data = get_mpris_info()
+                live.update(make_layout(data), refresh=True)
     finally:
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         print("\nMedia interface closed.")
@@ -124,4 +131,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

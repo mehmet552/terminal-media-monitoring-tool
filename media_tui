@@ -1,0 +1,27 @@
+#!/bin/sh
+# Launch the terminal media player UI.
+set -eu
+
+SCRIPT_PATH=$(readlink -f -- "$0")
+APP_DIR=$(CDPATH= cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd)
+
+if ! command -v playerctl >/dev/null 2>&1; then
+    printf '%s\n' "Error: playerctl is required. Install it using the instructions in README.md or run install.sh." >&2
+    exit 1
+fi
+
+if [ -x "$APP_DIR/.venv/bin/python" ]; then
+    PYTHON="$APP_DIR/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+    PYTHON=python3
+else
+    printf '%s\n' "Error: python3 is required. Install Python 3 or run install.sh." >&2
+    exit 1
+fi
+
+if ! "$PYTHON" -c 'import rich' >/dev/null 2>&1; then
+    printf 'Error: Python package rich is missing. Run the installer or install dependencies with: %s -m pip install -r "%s/requirements.txt"\n' "$PYTHON" "$APP_DIR" >&2
+    exit 1
+fi
+
+exec "$PYTHON" "$APP_DIR/media_tui.py" "$@"
