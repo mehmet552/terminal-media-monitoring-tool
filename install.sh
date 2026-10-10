@@ -3,12 +3,16 @@ set -euo pipefail
 
 REPOSITORY_URL="https://github.com/mehmet552/terminal-media-monitoring-tool.git"
 INSTALL_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/media-tui"
-BIN_DIR="$HOME/.local/bin"
+SYSTEM_BIN_DIR="/usr/local/bin"
 
 fail() {
     printf 'Error: %s\n' "$*" >&2
     exit 1
 }
+
+if [[ $EUID -eq 0 ]]; then
+    fail "Run this installer as your normal user, without sudo. It will request sudo only for system package installation and the /usr/local/bin command link."
+fi
 
 install_system_packages() {
     local package_manager=""
@@ -88,29 +92,16 @@ fi
 python3 -m venv "$INSTALL_DIR/.venv"
 "$INSTALL_DIR/.venv/bin/python" -m pip install --disable-pip-version-check -r "$INSTALL_DIR/requirements.txt"
 
-mkdir -p "$BIN_DIR"
-if [[ -e "$BIN_DIR/media_tui" && ! -L "$BIN_DIR/media_tui" ]]; then
-    fail "$BIN_DIR/media_tui already exists and is not a symlink. Move it aside and retry."
-fi
-ln -sfn "$INSTALL_DIR/media_tui" "$BIN_DIR/media_tui"
-
-if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
-    shell_name=$(basename "${SHELL:-}")
-    case "$shell_name" in
-        bash) shell_config="$HOME/.bashrc" ;;
-        zsh) shell_config="$HOME/.zshrc" ;;
-        *) shell_config="$HOME/.profile" ;;
-    esac
-
-    if ! grep -Fq '# media_tui command path' "$shell_config" 2>/dev/null; then
-        {
-            printf '\n# media_tui command path\n'
-            printf 'case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac\n'
-        } >> "$shell_config"
+if [[ -e "$SYSTEM_BIN_DIR/media_tui" || -L "$SYSTEM_BIN_DIR/media_tui" ]]; then
+    if [[ "$(readlink -f "$SYSTEM_BIN_DIR/media_tui")" != "$(readlink -f "$INSTALL_DIR/media_tui")" ]]; then
+        fail "$SYSTEM_BIN_DIR/media_tui already exists and points elsewhere. It was left unchanged; inspect it before replacing it."
     fi
-    PATH_NOTICE="Open a new terminal to use media_tui (or run: export PATH=\"\$HOME/.local/bin:\$PATH\")."
+elif [[ -w "$SYSTEM_BIN_DIR" ]]; then
+    ln -s "$INSTALL_DIR/media_tui" "$SYSTEM_BIN_DIR/media_tui"
+elif command -v sudo >/dev/null 2>&1; then
+    sudo ln -s "$INSTALL_DIR/media_tui" "$SYSTEM_BIN_DIR/media_tui"
 else
-    PATH_NOTICE="Run media_tui to start the application."
+    fail "Cannot install the media_tui command in $SYSTEM_BIN_DIR: write access or sudo is required."
 fi
 
-printf '\nInstallation complete. %s\n' "$PATH_NOTICE"
+printf '\nInstallation complete. Open any terminal and run: media_tui\n'

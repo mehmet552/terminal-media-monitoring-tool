@@ -10,10 +10,21 @@ from rich.panel import Panel
 from rich.text import Text
 
 POLL_INTERVAL = 1.0
+PLAYERCTL_TIMEOUT = 2.0
 
 
 def run_playerctl(*args):
-    return subprocess.check_output(["playerctl", *args], text=True, stderr=subprocess.DEVNULL).strip()
+    try:
+        return subprocess.check_output(
+            ["playerctl", *args],
+            text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=PLAYERCTL_TIMEOUT,
+        ).strip()
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(
+            f"playerctl did not respond within {PLAYERCTL_TIMEOUT:g} seconds."
+        ) from exc
 
 
 def format_progress(position, length):
