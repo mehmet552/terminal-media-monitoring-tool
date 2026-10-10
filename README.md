@@ -1,17 +1,17 @@
 # Terminal Media Monitoring Tool
 
-A lightweight, terminal-based media control panel built with Python, `rich`, and `playerctl`. Works across Linux desktop environments with MPRIS support (Spotify, VLC, YouTube Music, Firefox, Chrome, and other compatible players).
+A lightweight, terminal-based media control panel built with Python, `rich`, and `playerctl`. It works on Linux desktop environments with MPRIS support (Spotify, VLC, YouTube Music, Firefox, Chrome, and other compatible players).
 
 ## Features
 
 - Real-time status display for the current track title, artist, and media source.
 - Playback progress bar with elapsed and total time.
-- Keyboard controls for controlling media directly inside the terminal.
+- Keyboard controls for playback directly in the terminal.
 - Low resource usage with a minimal terminal footprint.
 
 ## Prerequisites
 
-Install `playerctl` and the Python dependencies on your Linux distribution:
+Install the required system package:
 
 ```bash
 # Fedora
@@ -24,11 +24,23 @@ sudo apt install playerctl python3-pip
 sudo pacman -S playerctl python-pip
 ```
 
-## Installation
+## Run the project
+
+This repository contains the project inside a nested folder named `terminal-media-monitoring-tool`.
+
+From the repository root:
 
 ```bash
-git clone https://github.com/mehmet552/terminal-media-monitoring-tool.git
-cd terminal-media-monitoring-tool/terminal-media-monitoring-tool
+cd /home/mehmet/projoler/terminal-media-monitoring-tool
+cd terminal-media-monitoring-tool
+python3 -m pip install -r requirements.txt
+python3 media_tui.py
+```
+
+If you are already inside the project folder, use:
+
+```bash
+cd terminal-media-monitoring-tool
 python3 -m pip install -r requirements.txt
 python3 media_tui.py
 ```
@@ -41,3 +53,8 @@ python3 media_tui.py
 | N | Next Track |
 | P | Previous Track |
 | Q | Quit TUI |
+
+## Notes
+
+- The app expects `playerctl` to be installed and a media player to be running.
+- If no active MPRIS player is detected, the app shows a "No active media player found" message.
