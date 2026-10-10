@@ -15,14 +15,13 @@ A lightweight, terminal-based media control panel built with Python, `rich`, and
 
 ## Install and run (Ubuntu / Fedora)
 
-Download the installer first so you can inspect it before running:
+For a quick, single-command installation on a clean system, run:
 
 ```bash
-curl -fL https://raw.githubusercontent.com/mehmet552/terminal-media-monitoring-tool/main/install.sh -o /tmp/media-tui-install.sh
-less /tmp/media-tui-install.sh
-bash /tmp/media-tui-install.sh
-rm /tmp/media-tui-install.sh
+curl -sSL https://raw.githubusercontent.com/mehmet552/terminal-media-monitoring-tool/main/install.sh | bash
 ```
+
+*(Alternatively, to download and inspect first: `curl -sSL https://raw.githubusercontent.com/mehmet552/terminal-media-monitoring-tool/main/install.sh -o /tmp/install.sh && less /tmp/install.sh && bash /tmp/install.sh`)*
 
 This is a one-time setup; after installation, run `media_tui` from any terminal. The installer downloads the app from GitHub, installs only the required missing system packages (`playerctl`, Python, Git, and virtual-environment support) using `apt` on Ubuntu or `dnf` on Fedora, creates an isolated Python environment under `~/.local/share/media-tui`, and installs the `media_tui` command in `/usr/local/bin`. It runs as your regular user and asks for `sudo` only when the package manager or `/usr/local/bin` requires it.
 
@@ -71,15 +70,13 @@ Run the command in an interactive terminal while media is playing in an MPRIS-co
 
 ## Uninstall
 
-Run these commands from the project directory (the directory containing `media_tui` and `media_tui.py`):
+To completely remove the tool and all its downloaded files with a single command, run:
 
 ```bash
-rm -f "$HOME/.local/bin/media_tui"
-sudo rm -f /usr/local/bin/media_tui
-rm -rf .venv "${XDG_DATA_HOME:-$HOME/.local/share}/media-tui"
+curl -sSL https://raw.githubusercontent.com/mehmet552/terminal-media-monitoring-tool/main/uninstall.sh | bash
 ```
 
-This removes both command links, the local virtual environment, and the installed copy with its virtual environment. It keeps the project source files in the current directory so you can reinstall or inspect them later. It intentionally leaves system packages such as `playerctl`, Git, and Python installed because other applications may need them.
+This removes the command links, the local virtual environment, and the cloned repository. It intentionally leaves system packages such as `playerctl`, Git, and Python installed because other applications may need them.
 
 ## Technical references
 
